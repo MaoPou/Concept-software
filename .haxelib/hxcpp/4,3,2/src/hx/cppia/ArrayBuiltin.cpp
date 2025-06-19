@@ -1305,7 +1305,7 @@ struct ArrayBuiltin : public ArrayBuiltinBase
          case af__set:
             {
                JitTemp thisVal(compiler, jtPointer);
-               JitTemp index(compiler, jtPointer);
+               JitTemp index(compiler, jtInt);
                ExprType elemType = (ExprType)ExprTypeOf<ELEM>::value;
                JitTemp tempVal(compiler, elemType);
 
@@ -1943,16 +1943,9 @@ struct ArrayBuiltin : public ArrayBuiltinBase
 };
 
 
-#if (HXCPP_API_LEVEL>=330)
-  #define BasePtr(x) x
-  typedef cpp::VirtualArray_obj ArrayAnyImpl;
-  #define CALL(x) x
-#else
-  #define BasePtr(x) x.mPtr
-  typedef ArrayBase ArrayAnyImpl;
-  #define CALL(x) __##x
-#endif
-
+#define BasePtr(x) x
+typedef cpp::VirtualArray_obj ArrayAnyImpl;
+#define CALL(x) x
 
 #ifdef CPPIA_JIT
 static hx::Object * SLJIT_CALL objGetItem(hx::Object *inObj, int inIndex)

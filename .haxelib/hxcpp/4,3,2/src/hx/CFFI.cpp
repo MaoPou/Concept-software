@@ -106,7 +106,7 @@ public:
          return _hxcpp_toString( Dynamic(this) );
 
       char buffer[40];
-      sprintf(buffer,"0x%p", mHandle);
+      snprintf(buffer,sizeof(buffer),"0x%p", mHandle);
 
       return HX_CSTRING("Abstract(") +
              __hxcpp_get_kind(this) +
@@ -466,10 +466,6 @@ void val_array_set_i(hx::Object * arg1,int arg2,hx::Object *inVal)
 
 void val_array_set_size(hx::Object * arg1,int inLen)
 {
-   #if (HXCPP_API_LEVEL<330)
-   if (arg1==0) return;
-   arg1->__SetSize(inLen);
-   #else
    hx::ArrayBase *base = dynamic_cast<hx::ArrayBase *>(arg1);
    if (base)
    {
@@ -481,7 +477,6 @@ void val_array_set_size(hx::Object * arg1,int inLen)
       if (va)
          va->__SetSize(inLen);
    }
-   #endif
 }
 
 void val_array_push(hx::Object * arg1,hx::Object *inValue)
@@ -504,11 +499,9 @@ hx::Object * alloc_array(int arg1)
 // Resizing the array may invalidate the pointer
 bool * val_array_bool(hx::Object * arg1)
 {
-   #if (HXCPP_API_LEVEL>330)
    hx::ArrayCommon *common = dynamic_cast< hx::ArrayCommon * >(arg1);
    if (!common) return 0;
    arg1 = common->__GetRealObject();
-   #endif
    Array_obj<bool> *a = dynamic_cast< Array_obj<bool> * >(arg1);
    if (a==0)
       return 0;
@@ -518,11 +511,9 @@ bool * val_array_bool(hx::Object * arg1)
 
 int * val_array_int(hx::Object * arg1)
 {
-   #if (HXCPP_API_LEVEL>330)
    hx::ArrayCommon *common = dynamic_cast< hx::ArrayCommon * >(arg1);
    if (!common) return 0;
    arg1 = common->__GetRealObject();
-   #endif
    Array_obj<int> *a = dynamic_cast< Array_obj<int> * >(arg1);
    if (a==0)
       return 0;
@@ -532,11 +523,9 @@ int * val_array_int(hx::Object * arg1)
 
 double * val_array_double(hx::Object * arg1)
 {
-   #if (HXCPP_API_LEVEL>330)
    hx::ArrayCommon *common = dynamic_cast< hx::ArrayCommon * >(arg1);
    if (!common) return 0;
    arg1 = common->__GetRealObject();
-   #endif
    Array_obj<double> *a = dynamic_cast< Array_obj<double> * >(arg1);
    if (a==0)
       return 0;
@@ -546,11 +535,9 @@ double * val_array_double(hx::Object * arg1)
 
 float * val_array_float(hx::Object * arg1)
 {
-   #if (HXCPP_API_LEVEL>330)
    hx::ArrayCommon *common = dynamic_cast< hx::ArrayCommon * >(arg1);
    if (!common) return 0;
    arg1 = common->__GetRealObject();
-   #endif
    Array_obj<float> *a = dynamic_cast< Array_obj<float> * >(arg1);
    if (a==0)
       return 0;
@@ -1010,7 +997,10 @@ const char16_t * hxs_utf16(const String &string,hx::IStringAlloc *alloc)
 }
 
 
-EXPORT void * hx_cffi(const char *inName)
+#ifndef HXCPP_STATIC_CFFI
+EXPORT
+#endif
+void * hx_cffi(const char *inName)
 {
    #define HXCPP_PRIME
    #define DEFFUNC(name,r,b,c) if ( !strcmp(inName,#name) ) return (void *)name;

@@ -172,7 +172,7 @@ bool _hx_std_set_time_locale( String l )
       freelocale(old);
    return true;
 #else
-   #ifdef HX_SMART_STRINGS
+   #if defined(NEKO_WINDOWS) && defined(HX_SMART_STRINGS)
    if (l.isUTF16Encoded())
       return _wsetlocale(LC_TIME,l.wchar_str());
    #endif
@@ -669,7 +669,7 @@ Array<String> _hx_std_sys_read_dir( String p )
    const wchar_t *path = p.wchar_str();
    size_t len = wcslen(path);
    if (len>MAX_PATH)
-      return null();
+      hx::Throw(HX_CSTRING("Invalid directory"));
 
    WIN32_FIND_DATAW d;
    HANDLE handle;
@@ -698,7 +698,7 @@ Array<String> _hx_std_sys_read_dir( String p )
    if( handle == INVALID_HANDLE_VALUE )
    {
       hx::ExitGCFreeZone();
-      return null();
+      hx::Throw(HX_CSTRING("Invalid directory"));
    }
    while( true )
    {

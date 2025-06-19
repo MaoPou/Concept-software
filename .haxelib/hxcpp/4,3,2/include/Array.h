@@ -44,7 +44,7 @@ template<> struct ReturnNull<unsigned char> { typedef Dynamic type; };
 template<> struct ReturnNull<short> { typedef Dynamic type; };
 template<> struct ReturnNull<unsigned short> { typedef Dynamic type; };
 template<> struct ReturnNull<unsigned int> { typedef Dynamic type; };
-template<> struct ReturnNull<::cpp::Int64> { typedef Dynamic type; };
+template<> struct ReturnNull< ::cpp::Int64> { typedef Dynamic type; };
 
 template<typename T>
 struct ArrayTraits { enum { StoreType = arrayObject }; };
@@ -53,7 +53,7 @@ template<> struct ArrayTraits<float> { enum { StoreType = arrayFloat}; };
 template<> struct ArrayTraits<double> { enum { StoreType = arrayFloat}; };
 template<> struct ArrayTraits<Dynamic> { enum { StoreType = arrayObject }; };
 template<> struct ArrayTraits<String> { enum { StoreType = arrayString }; };
-template<> struct ArrayTraits<::cpp::Int64> { enum { StoreType = arrayInt64 }; };
+template<> struct ArrayTraits< ::cpp::Int64> { enum { StoreType = arrayInt64 }; };
 
 }
 
@@ -136,9 +136,7 @@ class HXCPP_EXTERN_CLASS_ATTRIBUTES ArrayCommon : public hx::Object
       // Plain old data element size - or 0 if not plain-old-data
       int getArrayConvertId() const { return mArrayConvertId; }
 
-      #if (HXCPP_API_LEVEL>330)
       virtual hx::Object *__GetRealObject() { return this; }
-      #endif
 };
 
 // --- hx::ArrayBase ----------------------------------------------------
@@ -174,11 +172,7 @@ public:
    hx::Class __GetClass() const { return __mClass; }
    String toString();
    String __ToString() const;
-
-
-   #if (HXCPP_API_LEVEL>330)
    int __Compare(const hx::Object *inRHS) const;
-   #endif
 
 
    void setData(void *inData, int inElements)
@@ -248,39 +242,6 @@ public:
    // Dynamic interface
    hx::Val __Field(const String &inString ,hx::PropertyAccess inCallProp);
 
-   #if (HXCPP_API_LEVEL < 330)
-   virtual Dynamic __concat(const Dynamic &a0) = 0;
-   virtual Dynamic __copy() = 0;
-   virtual Dynamic __insert(const Dynamic &a0,const Dynamic &a1) = 0;
-   virtual Dynamic __iterator() = 0;
-   virtual Dynamic __keyValueIterator() = 0;
-   virtual Dynamic __join(const Dynamic &a0) = 0;
-   virtual Dynamic __pop() = 0;
-   virtual Dynamic __push(const Dynamic &a0) = 0;
-   virtual Dynamic __remove(const Dynamic &a0) = 0;
-   virtual Dynamic __removeAt(const Dynamic &a0) = 0;
-   virtual Dynamic __indexOf(const Dynamic &a0,const Dynamic &a1) = 0;
-   virtual Dynamic __lastIndexOf(const Dynamic &a0,const Dynamic &a1) = 0;
-   virtual Dynamic __reverse() = 0;
-   virtual Dynamic __shift() = 0;
-   virtual Dynamic __slice(const Dynamic &a0,const Dynamic &a1) = 0;
-   virtual Dynamic __splice(const Dynamic &a0,const Dynamic &a1) =0;
-   virtual Dynamic __sort(const Dynamic &a0) = 0;
-   virtual Dynamic __toString() = 0;
-   virtual Dynamic __unshift(const Dynamic &a0) = 0;
-   virtual Dynamic __map(const Dynamic &func) = 0;
-   virtual Dynamic __filter(const Dynamic &func) = 0;
-   inline Dynamic ____SetSize(const Dynamic &len)  { resize(len); return this; } 
-   inline Dynamic ____SetSizeExact(const Dynamic &len)  { __SetSizeExact(len); return this; } 
-   inline Dynamic ____unsafe_set(const Dynamic &i, const Dynamic &val)  { return __SetItem(i,val); } 
-   inline Dynamic ____unsafe_get(const Dynamic &i)  { return __GetItem(i); } 
-   virtual Dynamic __blit(const Dynamic &a0,const Dynamic &a1,const Dynamic &a2,const Dynamic &a3) = 0;
-   inline Dynamic __zero(const Dynamic &a0,const Dynamic &a1)  { zero(a0,a1); return null(); }
-   virtual Dynamic __memcmp(const Dynamic &a0) = 0;
-   virtual void __qsort(Dynamic inCompare) = 0;
-   virtual Dynamic __resize(const Dynamic &a0) = 0;
-
-   #else
    inline void ____SetSize(int len)  { resize(len); } 
    inline void ____SetSizeExact(int len)  { __SetSizeExact(len); } 
    inline Dynamic ____unsafe_set(const Dynamic &i, const Dynamic &val)  { return __SetItem(i,val); } 
@@ -316,7 +277,6 @@ public:
 
    virtual void set(int inIdx, const cpp::Variant &inValue) = 0;
    virtual void setUnsafe(int inIdx, const cpp::Variant &inValue) = 0;
-   #endif
 
    Dynamic concat_dyn();
    Dynamic copy_dyn();
@@ -420,9 +380,7 @@ namespace cpp
 }
 
 
-#if (HXCPP_API_LEVEL>=330)
 #include "cpp/VirtualArray.h"
-#endif
 
 
 
@@ -461,7 +419,7 @@ template<> inline bool *NewNull<bool>() { bool b=0; return (bool *)hx::NewGCPriv
 template<> inline double *NewNull<double>() { double d=0.0; return (double *)hx::NewGCPrivate(&d,sizeof(d)); }
 template<> inline float *NewNull<float>() { float d=0.0f; return (float *)hx::NewGCPrivate(&d,sizeof(d)); }
 template<> inline unsigned char *NewNull<unsigned char>() { unsigned char u=0; return (unsigned char *)hx::NewGCPrivate(&u,sizeof(u)); }
-template<> inline ::cpp::Int64 *NewNull<::cpp::Int64>() { ::cpp::Int64 i=0; return (::cpp::Int64 *)hx::NewGCPrivate(&i,sizeof(i)); }
+template<> inline ::cpp::Int64 *NewNull< ::cpp::Int64>() { ::cpp::Int64 i=0; return (::cpp::Int64 *)hx::NewGCPrivate(&i,sizeof(i)); }
 
 
 bool DynamicEq(const Dynamic &a, const Dynamic &b);
@@ -478,7 +436,7 @@ template<> struct ArrayClassId<signed int> { enum { id=hx::clsIdArrayInt }; };
 template<> struct ArrayClassId<float> { enum { id=hx::clsIdArrayFloat32 }; };
 template<> struct ArrayClassId<double> { enum { id=hx::clsIdArrayFloat64 }; };
 template<> struct ArrayClassId<String> { enum { id=hx::clsIdArrayString }; };
-template<> struct ArrayClassId<::cpp::Int64> { enum { id=hx::clsIdArrayInt64 }; };
+template<> struct ArrayClassId< ::cpp::Int64> { enum { id=hx::clsIdArrayInt64 }; };
 
 // sort...
 #include <algorithm>
@@ -515,13 +473,10 @@ public:
    static Array<ELEM_> __newConstWrapper(ELEM_ *inData,int inSize);
    static Array<ELEM_> fromData(const ELEM_ *inData,int inCount);
 
-
-#if (HXCPP_API_LEVEL>331)
    bool _hx_isInstanceOf(int inClassId)
    {
       return inClassId==1 || inClassId==(int)hx::clsIdArrayBase || inClassId==(int)_hx_ClassId;
    }
-#endif
 
    virtual bool AllocAtomic() const { return !hx::ContainsPointers<ELEM_>(); }
 
@@ -768,11 +723,7 @@ public:
       hx::ArrayBase::Splice(0,inPos,len);
    }
 
-   #if HXCPP_API_LEVEL>=330
    cpp::VirtualArray map(Dynamic inFunc);
-   #else
-   Dynamic map(Dynamic inFunc);
-   #endif
    Array<ELEM_> filter(Dynamic inFunc);
 
    void insert(int inPos, ELEM_ inValue)
@@ -879,34 +830,6 @@ public:
 
 
    // Dynamic interface
-   #if (HXCPP_API_LEVEL < 330)
-   virtual Dynamic __concat(const Dynamic &a0) { return concat(a0); }
-   virtual Dynamic __copy() { return copy(); }
-   virtual Dynamic __insert(const Dynamic &a0,const Dynamic &a1) { insert(a0,a1); return null(); }
-   virtual Dynamic __iterator() { return iterator(); }
-   virtual Dynamic __keyValueIterator() { return keyValueIterator(); }
-   virtual Dynamic __join(const Dynamic &a0) { return join(a0); }
-   virtual Dynamic __pop() { return pop(); }
-   virtual Dynamic __push(const Dynamic &a0) { return push(a0);}
-   virtual Dynamic __remove(const Dynamic &a0) { return remove(a0); }
-   virtual Dynamic __removeAt(const Dynamic &a0) { return removeAt(a0); }
-   virtual Dynamic __indexOf(const Dynamic &a0,const Dynamic &a1) { return indexOf(a0, a1); }
-   virtual Dynamic __lastIndexOf(const Dynamic &a0,const Dynamic &a1) { return lastIndexOf(a0, a1); }
-   virtual Dynamic __reverse() { reverse(); return null(); }
-   virtual Dynamic __shift() { return shift(); }
-   virtual Dynamic __slice(const Dynamic &a0,const Dynamic &a1) { return slice(a0,a1); }
-   virtual Dynamic __splice(const Dynamic &a0,const Dynamic &a1) { return splice(a0,a1); }
-   virtual Dynamic __sort(const Dynamic &a0) { sort(a0); return null(); }
-   virtual Dynamic __toString() { return toString(); }
-   virtual Dynamic __unshift(const Dynamic &a0) { unshift(a0); return null(); }
-   virtual Dynamic __map(const Dynamic &func) { return map(func); }
-   virtual Dynamic __filter(const Dynamic &func) { return filter(func); }
-   virtual Dynamic __blit(const Dynamic &a0,const Dynamic &a1,const Dynamic &a2,const Dynamic &a3) { blit(a0,a1,a2,a3); return null(); }
-   virtual Dynamic __memcmp(const Dynamic &a0) { return memcmp(a0); }
-   virtual Dynamic __resize(const Dynamic &a0) { resize(a0); return null(); }
-   virtual void __qsort(Dynamic inCompare) { this->qsort(inCompare); };
-   #else //(HXCPP_API_LEVEL < 330)
-
    virtual hx::ArrayBase *__concat(const cpp::VirtualArray &a0) { return concat(a0).mPtr; }
    virtual hx::ArrayBase *__copy() { return copy().mPtr; }
    virtual void __insert(int inIndex,const Dynamic &a1) { insert(inIndex,a1);}
@@ -950,9 +873,6 @@ public:
       elem = ELEM_(inValue);
       if (hx::ContainsPointers<ELEM_>()) { HX_OBJ_WB_GET(this,hx::PointerOf(elem)); }
    }
-
-
-   #endif
 };
 
 
@@ -1123,12 +1043,8 @@ public:
       return *this;
    }
 
-
-   #if (HXCPP_API_LEVEL >= 330)
    inline bool operator==(const cpp::VirtualArray &varray) const { return varray==*this; }
    inline bool operator!=(const cpp::VirtualArray &varray) const { return varray!=*this; }
-   #endif
-
 
    inline ELEM_ &operator[](int inIdx) { return CheckGetPtr()->Item(inIdx); }
    inline ELEM_ operator[](int inIdx) const { return CheckGetPtr()->__get(inIdx); }
@@ -1258,8 +1174,6 @@ inline typename ARRAY::Elem _hx_array_unsafe_get(ARRAY inArray, int inIndex)
 #include "cpp/VirtualArray.h"
 #endif
 
-
-#if HXCPP_API_LEVEL >= 330
 template<typename ELEM_>
 cpp::VirtualArray Array_obj<ELEM_>::map(Dynamic inFunc)
 {
@@ -1268,18 +1182,5 @@ cpp::VirtualArray Array_obj<ELEM_>::map(Dynamic inFunc)
       result->__unsafe_set(i,inFunc(__unsafe_get(i)));
    return result;
 }
-
-#else
-template<typename ELEM_>
-Dynamic Array_obj<ELEM_>::map(Dynamic inFunc)
-{
-   Array_obj<Dynamic> *result = new Array_obj<Dynamic>(length,0);
-   for(int i=0;i<length;i++)
-      result->__unsafe_set(i,inFunc(__unsafe_get(i)));
-   return result;
-}
-#endif
-
-
 
 #endif

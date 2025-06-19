@@ -1,6 +1,14 @@
 import haxe.crypto.Md5;
 import haxe.io.Path;
 import sys.FileSystem;
+#if haxe4
+import sys.thread.Mutex;
+#elseif cpp
+import cpp.vm.Mutex;
+#else
+import neko.vm.Mutex;
+#end
+using StringTools;
 
 private class FlagInfo
 {
@@ -35,8 +43,10 @@ class Compiler
    public var mCPPFlags:Array<String>;
    public var mOBJCFlags:Array<String>;
    public var mPCHFlags:Array<String>;
+   public var mAsmFlags:Array<String>;
    public var mAddGCCIdentity:Bool;
    public var mExe:String;
+   public var mAsmExe:String;
    public var mOutFlag:String;
    public var mObjDir:String;
    public var mRelObjDir:String;
@@ -72,12 +82,14 @@ class Compiler
       mOBJCFlags = [];
       mMMFlags = [];
       mPCHFlags = [];
+      mAsmFlags = [];
       mAddGCCIdentity = false;
       mCompilerVersion = null;
       mRcExt = ".res";
       mObjDir = "obj";
       mOutFlag = "-o";
       mExe = inExe;
+      mAsmExe = inExe;
       mID = inID;
       mExt = ".o";
       mPCHExt = ".pch";
@@ -172,12 +184,13 @@ class Compiler
    function getArgs(inFile:File)
    {
       var nvcc = inFile.isNvcc();
+      var asm = inFile.isAsm();
       var isRc = mRcExe!=null && inFile.isResource();
       var args = nvcc ? inFile.mGroup.mCompilerFlags.concat( BuildTool.getNvccFlags() ) :
                        inFile.mCompilerFlags.concat(inFile.mGroup.mCompilerFlags);
       var tagFilter = inFile.getTags().split(",");
       addOptimTags(tagFilter);
-      if (!isRc)
+      if (!isRc && !asm)
          for(flag in mFlags)
             flag.add(args,tagFilter);
       var ext = mExt.toLowerCase();
@@ -191,7 +204,10 @@ class Compiler
       addIdentity(ext,args);
 
       var allowPch = false;
-      if (nvcc)
+
+      if (asm)
+         args = args.concat(mAsmFlags);
+      else if (nvcc)
          args = args.concat(mNvccFlags);
       else if (isRc)
          args = args.concat(mRcFlags);
@@ -292,12 +308,16 @@ class Compiler
       catch(e:Dynamic) { }
    }
 
-   public function compile(inFile:File,inTid:Int,headerFunc:Void->Void,pchTimeStamp:Null<Float>)
+   static public var printMutex = new Mutex();
+
+   public function compile(inFile:File,inTid:Int,headerFunc:Void->Void,pchTimeStamp:Null<Float>,inProgess:Null<Progress>)
    {
       var obj_name = getObjName(inFile);
       var args = getArgs(inFile);
       var nvcc = inFile.isNvcc();
-      var exe = nvcc ? BuildTool.getNvcc() : mExe;
+      var asm = inFile.isAsm();
+      var exe = asm ? inFile.getAsmExe(mAsmExe) : nvcc ? BuildTool.getNvcc() : mExe;
+      var nasm = asm && (exe.endsWith("nasm") || exe.endsWith("nasm.exe"));
       var isRc =  mRcExe!=null && inFile.isResource();
       if (isRc)
          exe = mRcExe;
@@ -359,7 +379,7 @@ class Compiler
                args.push( (new Path( inFile.mDir + inFile.mName)).toString() );
          }
 
-         var out = nvcc ? "-o " : mOutFlag;
+         var out = (nvcc||nasm) ? "-o " : mOutFlag;
          if (out.substr(-1)==" ")
          {
             args.push(out.substr(0,out.length-1));
@@ -371,29 +391,41 @@ class Compiler
          if (delayedFilename!=null)
            args.push(delayedFilename);
 
-         var tagInfo = inFile.mTags==null ? "" : " " + inFile.mTags.split(",");
-
-         var fileName = inFile.mName;
-         var split = fileName.split ("/");
-         if (split.length > 1)
+         if (!Log.verbose)
          {
-            fileName = " \x1b[2m-\x1b[0m \x1b[33m" + split.slice(0, split.length - 1).join("/") + "/\x1b[33;1m" + split[split.length - 1] + "\x1b[0m";
-         }
-         else
-         {
-            fileName = " \x1b[2m-\x1b[0m \x1b[33;1m" + fileName + "\x1b[0m";
-         }
-         fileName += " \x1b[3m" + tagInfo + "\x1b[0m";
+            var tagInfo = inFile.mTags==null ? "" : " " + inFile.mTags.split(",");
 
+            var fileName = inFile.mName;
+            var split = fileName.split ("/");
+            if (split.length > 1)
+            {
+               fileName = " \x1b[2m-\x1b[0m \x1b[33m" + split.slice(0, split.length - 1).join("/") + "/\x1b[33;1m" + split[split.length - 1] + "\x1b[0m";
+            }
+            else
+            {
+               fileName = " \x1b[2m-\x1b[0m \x1b[33;1m" + fileName + "\x1b[0m";
+            }
+            fileName += " \x1b[3m" + tagInfo + "\x1b[0m";
+
+            printMutex.acquire();
+
+            if (inProgess != null)
+            {
+               inProgess.progress(1);
+               fileName = inProgess.getProgress() + fileName;
+            }
+
+            if((inTid >= 0 && BuildTool.threadExitCode == 0) || inTid < 0)
+            {
+               Log.info(fileName);
+            }
+            printMutex.release();
+         }
 
          if (inTid >= 0)
          {
             if (BuildTool.threadExitCode == 0)
             {
-               if (!Log.verbose)
-               {
-                  Log.info(fileName);
-               }
                var err = ProcessManager.runProcessThreaded(exe, args, null);
                cleanTmp(tmpFile);
                if (err!=0)
@@ -406,10 +438,6 @@ class Compiler
          }
          else
          {
-            if (!Log.verbose)
-            {
-               Log.info(fileName);
-            }
             var result = ProcessManager.runProcessThreaded(exe, args, null);
             cleanTmp(tmpFile);
             if (result!=0)

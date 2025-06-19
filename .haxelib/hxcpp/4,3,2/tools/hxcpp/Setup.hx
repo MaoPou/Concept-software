@@ -47,7 +47,7 @@ class Setup
           for (file in files)
           {
              file = file.split("\\").join("/");
-             var version = getNdkVersion(file);
+             var version = getNdkVersion(ndkDir + "/" + file);
              if (inBaseVersion==0 || Std.int(version)==inBaseVersion)
              {
                 if (version>bestVersion)
@@ -64,11 +64,26 @@ class Setup
       {
         Log.v("checks default ndk-bundle in android sdk");
         var ndkBundle = defines.get("ANDROID_SDK")+"/ndk-bundle";
+        var newStyle = false;
+        if (!FileSystem.exists(ndkBundle) )
+        {
+           Log.v("ndk-bundle directory not found in sdk,try ndk");
+           var altDir = defines.get("ANDROID_SDK")+"/ndk/";
+           if (FileSystem.exists(altDir) )
+           {
+              var alt = findBestNdk(altDir);
+              if (alt!=null)
+              {
+                 Log.v('using $alt ndk dir');
+                 ndkBundle = alt;
+              }
+           }
+        }
         ndkBundle = ndkBundle.split("\\").join("/");
-        var version = getNdkVersion(ndkBundle);
+        var version = getNdkVersion(ndkBundle, newStyle);
         if (version>bestVersion && (inBaseVersion==0 || inBaseVersion==Std.int(version)) )
         {
-           Log.v("Using default ndk-bundle in android sdk");
+           Log.v("Using default ndk-bundle in android sdk:" + ndkBundle);
            result = ndkBundle;
         }
       }
@@ -76,8 +91,48 @@ class Setup
       return result;
    }
 
-   static public function getNdkVersion(inDirName:String):Float
+   static function findBestNdk(root:String) : String
    {
+     var versionMatch = ~/(\d+)\.(\d+\.\d+)/;
+     var version:String = null;
+     var best = 0.0;
+     try
+     {
+        for (file in FileSystem.readDirectory(root))
+        {
+           if (versionMatch.match(file))
+           {
+               var maj = Std.parseInt(versionMatch.matched(1));
+               var minor = Std.parseFloat(versionMatch.matched(2));
+               var combined = maj*1000 + minor;
+               Log.v("  found ndk:" + file);
+               if (combined>best)
+               {
+                  best = combined;
+                  version = file;
+               }
+           }
+        }
+      }
+      catch(e:Dynamic)
+      {
+      }
+
+      if (version!=null)
+         return root + "/" + version;
+    
+      return null;
+   }
+
+   static var gotNdkVersion = 0.0;
+   static var cachedNdkPath:Null<String> = null;
+   static public function getNdkVersion(inDirName:String, newStyle=false):Float
+   {
+      if (gotNdkVersion!=0 && cachedNdkPath==inDirName)
+         return gotNdkVersion;
+
+      cachedNdkPath = inDirName;
+
       Log.v("Try to get version from source.properties");
       var src = toPath(inDirName+"/source.properties");
       if (sys.FileSystem.exists(src))
@@ -97,8 +152,9 @@ class Setup
                   var result:Float = 1.0 * Std.parseInt(split2[0]) + 0.001 * Std.parseInt(split2[1]);
                   if (result>=8)
                   {
-                     Log.v('Deduced NDK version '+result+' from "$inDirName"/source.properties');
+                     Log.v('Deduced NDK version '+result+' from "$inDirName/source.properties"');
                      fin.close();
+                     gotNdkVersion = result;
                      return result;
                   }
                }
@@ -121,11 +177,13 @@ class Setup
          var minor = extract_version.matched(3);
          if (minor!=null && minor.length>0)
             result += 0.001 * (minor.toLowerCase().charCodeAt(0)-'a'.code);
+         gotNdkVersion = result;
          return result;
       }
 
       Log.v('Could not deduce NDK version from "$inDirName" - assuming 8');
-      return 8;
+      gotNdkVersion = 8;
+      return gotNdkVersion;
    }
 
    public static function initHXCPPConfig(ioDefines:Hash<String>)
@@ -212,11 +270,12 @@ class Setup
 
    public static function setupEmscripten(ioDefines:Hash<String>)
    {
-      // Setup EMSCRIPTEN_SDK if possible - else assume developer has it in path
-      if (!ioDefines.exists("EMSCRIPTEN_SDK"))
+      // Setup EMSDK if possible - else assume developer has it in path
+      if (!ioDefines.exists("EMSDK") )
       {
          var home = ioDefines.get("HXCPP_HOME");
          var file = home + "/.emscripten";
+         Log.v('No EMSDK provided, checking $file');
          if (FileSystem.exists(file))
          {
             var content = sys.io.File.getContent(file);
@@ -230,31 +289,33 @@ class Setup
                   var val= value.matched(2);
                   if (name=="EMSCRIPTEN_ROOT")
                   {
-                     ioDefines.set("EMSCRIPTEN_SDK", val);
+                     ioDefines.set("EMSDK", val);
                   }
                   if (name=="PYTHON")
-                     ioDefines.set("EMSCRIPTEN_PYTHON", val);
+                     ioDefines.set("EMSDK_PYTHON", val);
                   if (name=="NODE_JS")
-                     ioDefines.set("EMSCRIPTEN_NODE_JS", val);
+                     ioDefines.set("EMSDK_NODE", val);
                }
             }
          }
       }
-   }
+      else
+      {
+         Log.v('Using provided EMSDK ${ioDefines.get("EMSDK")}');
+      }
 
+      if (!ioDefines.exists("EMSDK_PYTHON"))
+      {
+         Log.v("No EMSDK_PYTHON provided, using 'python'");
+      }
+      else
+         Log.v('Using provided EMSDK_PYTHON ${ioDefines.get("EMSDK_PYTHON")}');
 
-   public static function isRaspberryPi()
-   {
-       var modelFile = '/sys/firmware/devicetree/base/model';
-       if( !FileSystem.exists( modelFile ) )
-           return false;
-       try {
-           var model = sys.io.File.getContent( modelFile );
-           return ~/Raspberry/.match( model );
-       } catch(e:Dynamic) {
-           trace( e );
-       }
-       return false;
+      if (!ioDefines.exists("EMSDK_NODE"))
+      {
+         Log.v("No EMSDK_NODE provided, using 'node'");
+         ioDefines.set("EMSDK_NODE", "node");
+      }
    }
 
    static public function startPdbServer()
@@ -295,7 +356,7 @@ class Setup
       }
       else if (inWhat=="msvc")
       {
-         setupMSVC(ioDefines, ioDefines.exists("HXCPP_M64"), ioDefines.exists("HXCPP_ARM64"), ioDefines.exists("winrt"));
+         setupMSVC(ioDefines, ioDefines.exists("HXCPP_M64"), ioDefines.exists("HXCPP_ARM64"), ioDefines.exists("HXCPP_ARMV7"), ioDefines.exists("winrt"));
       }
       else if (inWhat=="pdbserver")
       {
@@ -358,7 +419,7 @@ class Setup
       else
       {
          root = defines.get("ANDROID_NDK_ROOT");
-         Log.info("", "\x1b[33;1mUsing Android NDK root: " + root + "\x1b[0m");
+         Log.setup("\x1b[33;1mUsing Android NDK root: " + root + "\x1b[0m");
       }
 
       if (ndkVersion==0)
@@ -366,7 +427,7 @@ class Setup
          var version = Setup.getNdkVersion( root );
          if (version > 0)
          {
-            Log.info("", "\x1b[33;1mDetected Android NDK " + version + "\x1b[0m");
+            Log.setup("\x1b[33;1mDetected Android NDK " + version + "\x1b[0m");
             defines.set("NDKV" + Std.int(version), "1" );
             ndkVersion = Std.int(version);
          }
@@ -406,7 +467,7 @@ class Setup
             if (bestVer!="")
             {
                defines.set("TOOLCHAIN_VERSION",bestVer);
-               Log.info("", "\x1b[33;1mDetected Android toolchain: "+arm_type+"-" + bestVer + "\x1b[0m");
+               Log.setup("\x1b[33;1mDetected Android toolchain: "+arm_type+"-" + bestVer + "\x1b[0m");
             }
          }
          catch(e:Dynamic) { }
@@ -415,7 +476,11 @@ class Setup
       // See what ANDROID_HOST to use ...
       try
       {
-         var prebuilt =  root+"/toolchains/"+arm_type+"-" + defines.get("TOOLCHAIN_VERSION") + "/prebuilt";
+         var prebuilt = root+"/toolchains/";
+         if (defines.exists("TOOLCHAIN_VERSION"))
+            prebuilt += arm_type + "-" + defines.get("TOOLCHAIN_VERSION") + "/prebuilt";
+         else
+            prebuilt += "llvm/prebuilt";
          var files = FileSystem.readDirectory(prebuilt);
          for (file in files)
          {
@@ -436,14 +501,36 @@ class Setup
       }
       catch(e:Dynamic) { }
 
-      if(defines.exists('NDKV20+')) {
-         Log.v([
-            "x86 Platform: 16",
-            "arm Platform: 16",
-            "x86_64 Platform: 21",
-            "arm_64 Platform: 21",
-            "Frameworks should set the minSdkVersion for each APK to these values."
-         ].join('\n'));
+      if (defines.exists('HXCPP_ANDROID_PLATFORM')) {
+         Log.setup("\x1b[33;1mUsing Android NDK platform: " + defines.get("HXCPP_ANDROID_PLATFORM") + "\x1b[0m");
+      }
+      else if (defines.exists('NDKV19+')) {
+         if (defines.exists("PLATFORM_NUMBER")) {
+            Log.warn("The PLATFORM_NUMBER define is deprecated. Please use the HXCPP_ANDROID_PLATFORM define instead.");
+            defines.set("HXCPP_ANDROID_PLATFORM", Std.string(defines.get("PLATFORM_NUMBER")));
+         } else {
+            var platformsJson = root + "/meta/platforms.json";
+
+            var minPlatform:Null<Int> = try {
+               haxe.Json.parse(sys.io.File.getContent(platformsJson)).min;
+            } catch (e) {
+               Log.warn("Unable to determine minimum supported Android platform: " + e.toString());
+               null;
+            };
+
+            if (minPlatform == null) {
+               Log.warn("Defaulting to Android platform 21");
+               minPlatform = 21;
+            }
+
+            // only platform version 21 and above support 64 bit
+            // https://developer.android.com/about/versions/lollipop#Perf
+            if (minPlatform < 21 && (defines.exists('HXCPP_ARM64') || defines.exists('HXCPP_X86_64'))) {
+               minPlatform = 21;
+            }
+
+            defines.set("HXCPP_ANDROID_PLATFORM", Std.string(minPlatform));
+         }
       }
       else {
          globallySetThePlatform(root, defines);
@@ -501,7 +588,7 @@ class Setup
          defines.set("PLATFORM", "android-" + best);
          androidPlatform = best;
       }
-      defines.set("ANDROID_PLATFORM_DEFINE", "HXCPP_ANDROID_PLATFORM=" + androidPlatform);
+      defines.set("HXCPP_ANDROID_PLATFORM", Std.string(androidPlatform));
       if (Log.verbose) Log.println("");
    }
 
@@ -581,7 +668,7 @@ class Setup
       }
    }
 
-   public static function setupMSVC(ioDefines:Hash<String>, in64:Bool, inArm64, isWinRT:Bool)
+   public static function setupMSVC(ioDefines:Hash<String>, in64:Bool, inArm64, inArm, isWinRT:Bool)
    {
       var detectMsvc = !ioDefines.exists("NO_AUTO_MSVC") &&
                        !ioDefines.exists("HXCPP_MSVC_CUSTOM");
@@ -613,11 +700,11 @@ class Setup
                }
                ioDefines.set("HXCPP_MSVC", where );
                Sys.putEnv("HXCPP_MSVC", where);
-               Log.info("", 'Using MSVC Ver $ival in $where ($varName)');
+               Log.setup('Using MSVC Ver $ival in $where ($varName)');
             }
             else
             {
-               Log.info("", 'Using specified MSVC Ver $val');
+               Log.setup('Using specified MSVC Ver $val');
                ioDefines.set("HXCPP_MSVC", val );
                Sys.putEnv("HXCPP_MSVC", val);
             }
@@ -631,6 +718,8 @@ class Setup
             extra += "-winrt";
         if (inArm64)
             extra += "-arm64";
+        else if (inArm)
+            extra += "-arm";
         else if (in64)
             extra += "64";
          var xpCompat = false;
@@ -716,7 +805,7 @@ class Setup
             if (reg.match(str))
             {
                var cl_version = Std.parseInt(reg.matched(1));
-               Log.info("", "Using MSVC version: " + cl_version);
+               Log.setup("Using MSVC version: " + cl_version);
                ioDefines.set("MSVC_VER", cl_version+"");
                if (cl_version>=17)
                   ioDefines.set("MSVC17+","1");

@@ -1276,7 +1276,7 @@ int String::indexOf(const String &inValue, Dynamic inStart) const
    int l = inValue.length;
 
    if (l==0) {
-      return s > length ? length : s;
+	  return std::max(0, std::min(s, length));
    }
 
    #ifdef HX_SMART_STRINGS
@@ -1333,8 +1333,11 @@ int String::lastIndexOf(const String &inValue, Dynamic inStart) const
    if (__s==0)
       return -1;
    int l = inValue.length;
-   if (l>length) return -1;
    int s = inStart==null() ? length : inStart->__ToInt();
+   if (l==0) {
+      return std::max(0, std::min(s, length));
+   }
+   if (l>length) return -1;
    if (s+l>length) s = length-l;
 
    #ifdef HX_SMART_STRINGS
@@ -2258,9 +2261,7 @@ public:
    };
 
    hx::Class __GetClass() const { return __StringClass; }
-   #if (HXCPP_API_LEVEL<331)
    bool __Is(hx::Object *inClass) const { return dynamic_cast< StringData *>(inClass); }
-   #endif
 
    virtual int __GetType() const { return vtString; }
    String __ToString() const { return mValue; }
@@ -2375,6 +2376,7 @@ void String::__boot()
    {
       #ifdef HX_SMART_STRINGS
       if (c>127)
+      #endif
       {
          char16_t buf[20];
          buf[0] = c;
@@ -2385,8 +2387,8 @@ void String::__boot()
          sConstStrings[c].__w = w;
          fixHashPerm16(sConstStrings[c]);
       }
+      #ifdef HX_SMART_STRINGS
       else
-      #endif
       {
          char buf[20];
          int  utf8Len = UTF8Bytes(c);
@@ -2396,6 +2398,7 @@ void String::__boot()
          sConstStrings[c].__s = (char *)InternalCreateConstBuffer(buf,utf8Len+1,true);
          sConstStrings[c].length = utf8Len;
       }
+      #endif
    }
 
    sConstEmptyString.mPtr = new (hx::NewObjConst)StringData(emptyString);
@@ -2404,8 +2407,3 @@ void String::__boot()
            &CreateEmptyString, &CreateString, 0, 0, 0
     );
 }
-
-
-
-
-

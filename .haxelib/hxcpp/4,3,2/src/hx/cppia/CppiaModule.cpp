@@ -111,6 +111,12 @@ void CppiaModule::registerDebugger()
    for(hx::UnorderedSet<int>::const_iterator i = allFileIds.begin(); i!=allFileIds.end(); ++i)
       addScriptableFile(strings[*i]);
 
+   #if (HXCPP_API_LEVEL >= 500)
+   if (hx::g_onScriptLoadedFunction != null{}) {
+      hx::g_onScriptLoadedFunction();
+   }
+   #endif
+
    #endif
 }
 
@@ -179,11 +185,7 @@ int CppiaModule::getInterfaceSlot(const std::string &inName)
    InterfaceSlots::iterator it = interfaceSlots.find(inName);
    if (it==interfaceSlots.end())
    {
-      #if (HXCPP_API_LEVEL >= 330)
       int result = interfaceSlots.size()+1;
-      #else
-      int result = interfaceSlots.size()+2;
-      #endif
       interfaceSlots[inName] = result;
       return result;
    }

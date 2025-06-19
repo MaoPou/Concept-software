@@ -91,10 +91,7 @@ public:
       return result;
    }
 
-   #if (HXCPP_API_LEVEL>330)
    int __Compare(const hx::Object *inRHS) const;
-   #endif
-
 
    inline int get_length() const
    {
@@ -609,7 +606,7 @@ public:
 // Build dynamic array from foreign array
 template<typename SOURCE_>
 VirtualArray::VirtualArray( const Array<SOURCE_> &inRHS )
-   : super( new VirtualArray_obj( inRHS.mPtr, true) )
+   : super( !inRHS.mPtr ? 0 : new VirtualArray_obj( inRHS.mPtr, true) )
 {
 }
 

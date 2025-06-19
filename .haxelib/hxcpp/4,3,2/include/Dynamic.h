@@ -38,7 +38,7 @@ public:
    Dynamic(const cpp::Variant &inRHS) : super(inRHS.asDynamic()) { }
    template<typename T>
    Dynamic(const hx::Native<T *> &inInterface):super(inInterface.ptr ? inInterface->__GetRealObject() : (hx::Object *)0 ) { }
-   #if !defined(__GNUC__) || (defined(__WORDSIZE) && (__WORDSIZE != 64))
+   #if !defined(__GNUC__) || defined(__MINGW32__) || (defined(__WORDSIZE) && (__WORDSIZE != 64))
    Dynamic(long inVal);
    Dynamic(unsigned long inVal);
    #endif
@@ -130,11 +130,7 @@ public:
    {
       if (mPtr==0) return inRHS.mPtr==0 ? 0 : -1;
       if (inRHS.mPtr==0) return -1;
-      #if (HXCPP_API_LEVEL>=331)
       return mPtr->__Compare(inRHS.mPtr);
-      #else
-      return mPtr->__Compare(inRHS.mPtr->__GetRealObject());
-      #endif
    }
 
    bool operator==(const null &inRHS) const { return mPtr==0; }
@@ -146,11 +142,7 @@ public:
       //if (mPtr==inRHS.mPtr) return true;
       if (!mPtr && !inRHS.mPtr) return true;
       if (!mPtr || !inRHS.mPtr) return false;
-      #if (HXCPP_API_LEVEL>=331)
       return mPtr->__Compare(inRHS.mPtr)==0;
-      #else
-      return mPtr->__Compare(inRHS.mPtr->__GetRealObject())==0;
-      #endif
    }
 
    bool operator != (const Dynamic &inRHS) const
@@ -159,11 +151,7 @@ public:
       //if (mPtr==inRHS.mPtr) return true;
       if (!mPtr && !inRHS.mPtr) return false;
       if (!mPtr || !inRHS.mPtr) return true;
-      #if (HXCPP_API_LEVEL>=331)
       return mPtr->__Compare(inRHS.mPtr)!=0;
-      #else
-      return mPtr->__Compare(inRHS.mPtr->__GetRealObject())!=0;
-      #endif
    }
 
 
@@ -217,11 +205,7 @@ public:
    {
       if (mPtr==inRHS.mPtr) return true;
       if (!mPtr || !inRHS.mPtr) return false;
-      #if (HXCPP_API_LEVEL>=331)
       return mPtr == inRHS.mPtr;
-      #else
-      return mPtr->__GetRealObject() == inRHS.mPtr->__GetRealObject();
-      #endif
    }
 
    template<typename T_>
@@ -229,11 +213,7 @@ public:
    {
       if (mPtr==inRHS.mPtr) return false;
       if (!mPtr || !inRHS.mPtr) return true;
-      #if (HXCPP_API_LEVEL>=331)
       return mPtr != inRHS.mPtr;
-      #else
-      return mPtr->__GetRealObject() != inRHS.mPtr->__GetRealObject();
-      #endif
    }
 
 
@@ -408,7 +388,7 @@ HXCPP_EXTERN_CLASS_ATTRIBUTES hx::Class &GetInt64Class();
 template<>
 inline bool Dynamic::IsClass<int>() { return mPtr && mPtr->__GetClass()==hx::GetIntClass(); }
 template<>
-inline bool Dynamic::IsClass<double>() { return mPtr && 
+inline bool Dynamic::IsClass<double>() { return mPtr &&
    ( mPtr->__GetClass()==hx::GetIntClass() || mPtr->__GetClass()==hx::GetFloatClass()) ; }
 template<>
 inline bool Dynamic::IsClass<float>() { return mPtr && mPtr->__GetClass()==hx::GetFloatClass(); }
@@ -421,7 +401,7 @@ inline bool Dynamic::IsClass<String>() { return mPtr && mPtr->__GetClass()==hx::
 template<>
 inline bool Dynamic::IsClass<Dynamic>() { return true; }
 template<>
-inline bool Dynamic::IsClass<::cpp::Int64>() { return mPtr && mPtr->__GetClass()==hx::GetInt64Class(); }
+inline bool Dynamic::IsClass< ::cpp::Int64>() { return mPtr && mPtr->__GetClass()==hx::GetInt64Class(); }
 
 inline String Dynamic::operator+(const String &s) const { return Cast<String>() + s; }
 
@@ -458,7 +438,7 @@ bool operator==(Platform::Box<T> ^inPtr, nullptr_t)
    inline bool operator op (float inLHS,const ::Dynamic &inRHS) \
       { return inRHS.IsNumeric() && ((double)inLHS op (double)inRHS); } \
    inline bool operator op (int inLHS,const ::Dynamic &inRHS) \
-      { return inRHS.IsNumeric() && (inLHS op (double)inRHS); } 
+      { return inRHS.IsNumeric() && (inLHS op (double)inRHS); }
 
 COMPARE_DYNAMIC_OP( < )
 COMPARE_DYNAMIC_OP( <= )

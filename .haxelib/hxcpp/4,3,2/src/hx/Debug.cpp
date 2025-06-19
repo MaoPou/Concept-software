@@ -77,19 +77,22 @@ static void CriticalErrorHandler(String inErr, bool allowFixup)
       return;
 #endif
 
+#ifdef HXCPP_STACK_TRACE
+   hx::StackContext *ctx = hx::StackContext::getCurrent();
+   ctx->beginCatch(true);
+#endif
+
    if (sCriticalErrorHandler!=null())
       sCriticalErrorHandler(inErr);
 
 #ifdef HXCPP_STACK_TRACE
-   hx::StackContext *ctx = hx::StackContext::getCurrent();
-   ctx->beginCatch(true);
    ctx->dumpExceptionStack();
 #endif
 
     DBGLOG("Critical Error: %s\n", inErr.utf8_str());
 
 #if defined(HX_WINDOWS) && !defined(HX_WINRT)
-    MessageBoxA(0, inErr.utf8_str(), "Critial Error - program must terminate",
+    MessageBoxA(0, inErr.utf8_str(), "Critical Error - program must terminate",
         MB_ICONEXCLAMATION|MB_OK);
 #endif
 
@@ -189,10 +192,8 @@ StackContext::StackContext()
    mIsUnwindingException = false;
    #endif
 
-   #ifdef HXCPP_TELEMETRY
-   //mTelemetry = tlmCreate(this);
-   // Do not automatically start
-   mTelemetry = 0;
+   #if HXCPP_TELEMETRY
+   mTelemetry = tlmCreate(this);
    #endif
 
    #ifdef HXCPP_DEBUGGER
@@ -444,14 +445,7 @@ void StackContext::dumpExceptionStack()
 ExceptionStackFrame::ExceptionStackFrame(const StackFrame &inFrame)
 {
    // It is safe to use the pointer in 331+
-   #if HXCPP_API_LEVEL > 330
    position = inFrame.position;
-   #else
-   // Must copy the pointer values
-   className =  inFrame.position->className;
-   functionName =  inFrame.position->functionName;
-   fileName =  inFrame.position->fileName;
-   #endif
 
    #ifdef HXCPP_STACK_LINE
    line = inFrame.lineNumber;
@@ -464,11 +458,9 @@ ExceptionStackFrame::ExceptionStackFrame(const StackFrame &inFrame)
    int line=0;
    #endif
 
-   #if HXCPP_API_LEVEL > 330
    const char *fileName = position->fileName;
    const char *className = position->className;
    const char *functionName = position->functionName;
-   #endif
 
    return FormatStack(fileName, className, functionName, line, inForDisplay);
 }

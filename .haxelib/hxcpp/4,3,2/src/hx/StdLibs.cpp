@@ -194,26 +194,32 @@ Array<unsigned char> __hxcpp_resource_bytes(String inName)
 
 // -- hx::Native -------
 
-#if HXCPP_API_LEVEL >= 330
 extern "C" void __hxcpp_lib_main();
 namespace hx
 {
-   const char *Init()
+   static std::string initReturnBuffer;
+   const char *Init(bool stayAttached)
    {
       try
       {
          __hxcpp_lib_main();
+         if (!stayAttached)
+            SetTopOfStack(0,true);
          return 0;
       }
       catch(Dynamic e)
       {
          HX_TOP_OF_STACK
+         if (!stayAttached)
+         {
+            initReturnBuffer = e->toString().utf8_str();
+            SetTopOfStack(0,true);
+            return initReturnBuffer.c_str();
+         }
          return e->toString().utf8_str();
       }
    }
 }
-#endif
-
 
 // --- System ---------------------------------------------------------------------
 
@@ -276,7 +282,7 @@ void __hxcpp_stdlibs_boot()
    //  It does not cause fread to return immediately - as perhaps desired.
    //  But it does cause some new-line characters to be lost.
    //setbuf(stdin, 0);
-   setbuf(stdout, 0);
+   setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
    setbuf(stderr, 0);
 }
 
@@ -301,7 +307,7 @@ void __trace(Dynamic inObj, Dynamic info)
       //PRINTF("%s:%d: %s\n", filename, line, text.raw_ptr() ? text.out_str(&convertBuf) : "null");
       PRINTF("%s:%d: %s\n", filename, line, text.raw_ptr() ? text.out_str(&convertBuf) : "null");
    }
-
+   fflush(stdout);
 }
 
 void __hxcpp_exit(int inExitCode)
@@ -583,6 +589,7 @@ void __hxcpp_println_string(const String &inV)
 {
    hx::strbuf convertBuf;
    PRINTF("%s\n", inV.out_str(&convertBuf));
+   fflush(stdout);
 }
 
 
@@ -633,7 +640,16 @@ Dynamic __hxcpp_parse_int(const String &inString)
    while (isspace(*str)) ++str;
    bool isHex = is_hex_string(str, strlen(str));
    char *end = 0;
-   long result = strtol(str,&end,isHex ? 16 : 10);
+   long result;
+   if (isHex)
+   {
+      bool neg = str[0] == '-';
+      if (neg) str++;
+      result = strtoul(str,&end,16);
+      if (neg) result = -result;
+   }
+   else 
+      result = strtol(str,&end,10);
    #ifdef HX_WINDOWS
    if (str==end && !isHex)
    #else

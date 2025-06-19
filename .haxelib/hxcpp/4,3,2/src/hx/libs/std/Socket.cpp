@@ -11,7 +11,7 @@
    // Mingw / gcc on windows
    #define _WIN32_WINNT 0x0501
    #include <winsock2.h>
-   #   include <Ws2tcpip.h>
+   #include <ws2tcpip.h>
 #else
    // Windows...
    #include <winsock2.h>
@@ -95,6 +95,29 @@ SOCKET val_sock(Dynamic inValue)
 
    hx::Throw(HX_CSTRING("Invalid socket handle"));
    return 0;
+}
+
+
+void reset_sock(Dynamic inValue)
+{
+   if (inValue.mPtr)
+   {
+      int type = inValue->__GetType();
+      if (type==vtClass)
+      {
+         inValue = inValue->__Field( HX_CSTRING("__s"), hx::paccNever );
+         if (inValue.mPtr==0)
+            return;
+         type = inValue->__GetType();
+      }
+
+      if (type==socketType) {
+         static_cast<SocketWrapper *>(inValue.mPtr)->socket = INVALID_SOCKET;
+         return;
+      }
+   }
+
+   hx::Throw(HX_CSTRING("Invalid socket handle"));
 }
 
 
@@ -190,9 +213,10 @@ void _hx_std_socket_close( Dynamic handle )
 {
    SOCKET s = val_sock(handle);
    POSIX_LABEL(close_again);
-   if( closesocket(s) ) {
+   if( s != INVALID_SOCKET && closesocket(s) ) {
       HANDLE_EINTR(close_again);
    }
+   reset_sock(handle);
 }
 
 /**
@@ -412,7 +436,7 @@ Array<unsigned char> _hx_std_host_resolve_ipv6( String host, bool )
       memset(&hints, 0, sizeof(struct addrinfo));
       hints.ai_family = AF_INET6;  //  IPv6
       hints.ai_socktype = 0;  // any - SOCK_STREAM or SOCK_DGRAM
-      hints.ai_flags = AI_PASSIVE;  // For wildcard IP address 
+      hints.ai_flags = AI_PASSIVE;  // For wildcard IP address
       hints.ai_protocol = 0;        // Any protocol
       hints.ai_canonname = 0;
       hints.ai_addr = 0;
