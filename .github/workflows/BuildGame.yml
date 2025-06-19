@@ -99,7 +99,7 @@ jobs:
 
       - name: Install Libraries
         run: |
-          haxelib setup ./haxelib
+          haxelib setup ./.haxelib
 
       - name: Configure Android
         run: |
