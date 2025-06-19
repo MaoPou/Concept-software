@@ -25,7 +25,7 @@ jobs:
 
       - name: Install Libraries
         run: |
-          haxelib setup ./haxelib
+          haxelib setup ./.haxelib
 
       - name: Compile
         run: haxelib run lime build windows
