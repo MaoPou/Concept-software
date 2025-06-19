@@ -7,13 +7,17 @@ import flixel.FlxCamera;
 import flixel.util.FlxSpriteUtil;
 import flixel.tweens.FlxTween;
 import flixel.tweens.FlxEase;
+import flixel.sound.FlxSound;
 import openfl.display.GradientType;
 import openfl.geom.Matrix;
 import openfl.display.Shape;
+import openfl.utils.Assets;
 
 class MainState extends FlxState
 {
     public var MainCam:FlxCamera;
+    public var music:FlxSound;
+
     override public function create():Void
     {
         super.create();
@@ -44,5 +48,10 @@ class MainState extends FlxState
         bg.cameras = [MainCam];
         MainCam.alpha = 0;
         FlxTween.tween(MainCam, {alpha: 1}, 0.6, {ease: FlxEase.cubeInOut});
+
+        music = new FlxSound();
+        music.loadEmbedded("assets/music/main.ogg", true);
+        music.play();
+        music.volume = 0.8;
     }
 }

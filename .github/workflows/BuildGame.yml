@@ -111,18 +111,12 @@ jobs:
       - name: Compile
         run: haxelib run lime build android
 
-      - name: Make zip for release
-        shell: pwsh
-        run: | 
-          cd export\android\bin\app\build\outputs\apk\release
-          Compress-Archive -Path . -DestinationPath android.zip
-
       - name: Upload Artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@main
         with:
           name: androidBuild
-          path: export\android\bin\app\build\outputs\apk\release\*.zip
+          path: export\android\bin\app\build\outputs\apk\release\*.apk
           if-no-files-found: error
 
       - name: Clearing already existing cache
