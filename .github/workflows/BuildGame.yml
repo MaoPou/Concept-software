@@ -33,7 +33,7 @@ jobs:
       - name: Make zip for release
         shell: pwsh
         run: | 
-          cd export\release\windows\bin
+          cd export\windows\bin
           Compress-Archive -Path . -DestinationPath windows.zip
 
       - name: Upload Artifact
@@ -41,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@main
         with:
           name: windowsBuild
-          path: export\release\windows\bin\*.zip
+          path: export\windows\bin\*.zip
           if-no-files-found: error
 
       - name: Clearing already existing cache
@@ -114,7 +114,7 @@ jobs:
       - name: Make zip for release
         shell: pwsh
         run: | 
-          cd export\release\android\bin
+          cd export\android\bin\app\build\outputs\apk\release
           Compress-Archive -Path . -DestinationPath android.zip
 
       - name: Upload Artifact
@@ -122,7 +122,7 @@ jobs:
         uses: actions/upload-artifact@main
         with:
           name: androidBuild
-          path: export\release\android\bin\*.zip
+          path: export\android\bin\app\build\outputs\apk\release\*.zip
           if-no-files-found: error
 
       - name: Clearing already existing cache
