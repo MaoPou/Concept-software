@@ -1,0 +1,21 @@
+{
+	"name": "extension-androidtools",
+	"url": "https://github.com/MAJigsaw77/extension-androidtools",
+	"license": "MIT",
+	"tags": [
+		"android",
+		"java",
+		"haxe",
+		"jni"
+	],
+	"description": "A Haxe/Lime extension that incorporates Java functions through JNI.",
+	"version": "2.2.1",
+	"releasenote": "Add AudioManager and Fix the notch retrival function.",
+	"contributors": [
+		"MAJigsaw77"
+	],
+	"dependencies": {
+		"hxcpp":"",
+		"lime":""
+	}
+}
