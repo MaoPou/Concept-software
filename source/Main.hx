@@ -12,6 +12,8 @@ import openfl.display.Sprite;
 
 import objects.FpsCounter;
 
+import openfl.Assets;
+
 class Main extends Sprite
 {
 	public var fps:Int = 0;

@@ -43,10 +43,24 @@ class MainState extends FlxState
 
     var welcome:FlxText;
 
+    var version1:FlxText;
+    var version2:FlxText;
+
     var start:FlxText;
+    var startLine:FlxSprite;
+
     var settings:FlxText;
+    var settingsLine:FlxSprite;
+
     var credits:FlxText;
+    var creditsLine:FlxSprite;
+    
     var contribute:FlxText;
+    var contributeLine:FlxSprite;
+
+
+    var nowChoise:Int = -1;
+    var helpChoise:Int = -1;
 
     override public function create():Void
     {
@@ -121,8 +135,7 @@ class MainState extends FlxState
         
         canvas.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
         
-        var mousePos = FlxPoint.get(FlxG.mouse.getViewPosition(MainCam).x, 
-                              FlxG.mouse.getViewPosition(MainCam).y);
+        var mousePos = FlxPoint.get(FlxG.mouse.getViewPosition(MainCam).x, FlxG.mouse.getViewPosition(MainCam).y);
         
         points.forEachAlive(function(point:FlxSprite)
         {
@@ -205,6 +218,55 @@ class MainState extends FlxState
         });
         
         mousePos.put();
+
+        if(FlxG.mouse.overlaps(start)){
+            nowChoise = 0;
+        }else if(FlxG.mouse.overlaps(settings)){
+            nowChoise = 1;
+        }else if(FlxG.mouse.overlaps(credits)){
+            nowChoise = 2;
+        }else if(FlxG.mouse.overlaps(contribute)){
+            nowChoise = 3;
+        }else{
+            nowChoise = -1;
+        }
+
+        if(nowChoise != helpChoise){
+            updateLine(nowChoise);
+            helpChoise = nowChoise;
+        }
+
+        startLine.y = start.y + start.height + 5;
+        settingsLine.y = settings.y + settings.height + 5;
+        creditsLine.y = credits.y + credits.height + 5;
+        contributeLine.y = contribute.y + contribute.height + 5;
+
+    }
+
+    function updateLine(now:Int) {
+        // 1. 定义所有线条的数组和对应索引
+        var lines = [
+            {index: 0, sprite: startLine},
+            {index: 1, sprite: settingsLine},
+            {index: 2, sprite: creditsLine},
+            {index: 3, sprite: contributeLine}
+        ];
+
+        // 2. 取消所有正在进行的 Tween
+        for (line in lines) {
+            FlxTween.cancelTweensOf(line.sprite.scale);
+        }
+
+        // 3. 为每条线设置 Tween
+        for (line in lines) {
+            var targetScale = (line.index == now) ? 1 : 0;
+            FlxTween.tween(
+                line.sprite.scale, 
+                {x: targetScale}, 
+                0.05, 
+                {ease: FlxEase.circInOut}
+            );
+        }
     }
 
     private function createDecorativeLines():Void 
@@ -223,7 +285,7 @@ class MainState extends FlxState
 
         bottomLine.cameras = [MainCam];
 
-        var version1 = new FlxText(930, 668, 0, "Vesper Plume 0.9");
+        version1 = new FlxText(1229, 639, 0, "BY MaoPou");
         version1.setFormat("assets/fonts/Main.ttf", 42, 0xFFFFFFFF, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE);
         version1.borderColor = 0xFF000000;
         version1.borderSize = 1;
@@ -232,7 +294,7 @@ class MainState extends FlxState
         version1.cameras = [MainCam];
         version1.scale.x = version1.scale.y = 0.5;
         
-        var version2 = new FlxText(1085, 639, 0, "BY MaoPou");
+        version2 = new FlxText(1215, 668, 0, "Vesper Plume 0.9");
         version2.setFormat("assets/fonts/Main.ttf", 42, 0xFFFFFFFF, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE);
         version2.borderColor = 0xFF000000;
         version2.borderSize = 1;
@@ -250,52 +312,93 @@ class MainState extends FlxState
         welcome.cameras = [MainCam];
         welcome.alpha = 0;
 
-        start = new FlxText(0, 213, FlxG.width, "Start");
+        start = new FlxText(0, 193, 0, "Start");
         start.setFormat("assets/fonts/Main.ttf", 80, 0xFFFFFFFF, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE);
         start.borderColor = 0xFF000000;
         start.borderSize = 1;
         start.antialiasing = true;
         add(start);
         start.cameras = [MainCam];
-        //start.alpha = 0;
+        start.alpha = 0;
         start.scale.x = start.scale.y = 0.5;
-        
+        start.updateHitbox();
+        start.x = FlxG.width / 2 - start.width / 2;
 
-        settings = new FlxText(0, 303, FlxG.width, "Settings");
+        startLine = new FlxSprite(start.x, start.y + start.height + 5);
+        startLine.makeGraphic(Std.int(start.width + 10), 1, FlxColor.WHITE);
+        startLine.origin.set(startLine.width / 2, startLine.height / 2);
+        add(startLine);
+        startLine.scale.x = 0;
+        
+        settings = new FlxText(0, 283, 0, "Settings");
         settings.setFormat("assets/fonts/Main.ttf", 80, 0xFFFFFFFF, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE);
         settings.borderColor = 0xFF000000;
         settings.borderSize = 1;
         settings.antialiasing = true;
         add(settings);
         settings.cameras = [MainCam];
-        //settings.alpha = 0;
+        settings.alpha = 0;
         settings.scale.x = settings.scale.y = 0.5;
+        settings.updateHitbox();
+        settings.x = FlxG.width / 2 - settings.width / 2;
 
-        credits = new FlxText(0, 393, FlxG.width, "Credits");
+        settingsLine = new FlxSprite(settings.x, settings.y + settings.height + 5);
+        settingsLine.makeGraphic(Std.int(settings.width + 10), 1, FlxColor.WHITE);
+        settingsLine.origin.set(settingsLine.width / 2, settingsLine.height / 2);
+        add(settingsLine);
+        settingsLine.scale.x = 0;
+
+        credits = new FlxText(0, 373, 0, "Credits");
         credits.setFormat("assets/fonts/Main.ttf", 80, 0xFFFFFFFF, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE);
         credits.borderColor = 0xFF000000;
         credits.borderSize = 1;
         credits.antialiasing = true;
         add(credits);
         credits.cameras = [MainCam];
-        //credits.alpha = 0;
+        credits.alpha = 0;
         credits.scale.x = credits.scale.y = 0.5;
+        credits.updateHitbox();
+        credits.x = FlxG.width / 2 - credits.width / 2;
 
-        contribute = new FlxText(0, 483, FlxG.width, "Contribute");
+        creditsLine = new FlxSprite(credits.x, credits.y + credits.height + 5);
+        creditsLine.makeGraphic(Std.int(credits.width + 10), 1, FlxColor.WHITE);
+        add(creditsLine);
+        creditsLine.scale.x = 0;
+
+        contribute = new FlxText(0, 463, 0, "Contribute");
         contribute.setFormat("assets/fonts/Main.ttf", 80, 0xFFFFFFFF, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE);
         contribute.borderColor = 0xFF000000;
         contribute.borderSize = 1;
         contribute.antialiasing = true;
         add(contribute);
         contribute.cameras = [MainCam];
-        //contribute.alpha = 0;
+        contribute.alpha = 0;
         contribute.scale.x = contribute.scale.y = 0.5;
+        contribute.updateHitbox();
+        contribute.x = FlxG.width / 2 - contribute.width / 2;
+
+        contributeLine = new FlxSprite(contribute.x, contribute.y + contribute.height + 5);
+        contributeLine.makeGraphic(Std.int(contribute.width + 10), 1, FlxColor.WHITE);
+        add(contributeLine);
+        contribute.scale.x = 0;
 
         FlxTimer.wait(0.5,() -> welcomes());
     }
 
     function welcomes() {
-        FlxTween.tween(welcome, {alpha: 1,y: 29}, 0.7, {ease: FlxEase.circOut});
+        FlxTween.tween(welcome, {alpha: 1,y: 29}, 0.7, {
+            ease: FlxEase.circOut,
+            onComplete: function(flx:FlxTween){
+                FlxTween.tween(start, {alpha: 1,y: 213}, 0.7, {ease: FlxEase.circOut});
+                FlxTimer.wait(0.1,() -> FlxTween.tween(settings, {alpha: 1,y: 303}, 0.7, {ease: FlxEase.circOut}));
+                FlxTimer.wait(0.2,() -> FlxTween.tween(credits, {alpha: 1,y: 393}, 0.7, {ease: FlxEase.circOut}));
+                FlxTimer.wait(0.3,() -> FlxTween.tween(contribute, {alpha: 1,y: 483}, 0.7, {ease: FlxEase.circOut}));
+
+                FlxTimer.wait(0.3,() -> FlxTween.tween(version1, {x: 1085}, 1, {ease: FlxEase.backOut}));
+                FlxTimer.wait(0.4,() -> FlxTween.tween(version2, {x: 995}, 1, {ease: FlxEase.backOut}));
+            }
+        });
+
         FlxTimer.wait(2,() -> {
             welcome.text = "Vesper Plume";
             welcome.y = welcome.alpha = 0;
