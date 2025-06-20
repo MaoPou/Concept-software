@@ -380,7 +380,7 @@ class MainState extends FlxState
         contributeLine = new FlxSprite(contribute.x, contribute.y + contribute.height + 5);
         contributeLine.makeGraphic(Std.int(contribute.width + 10), 1, FlxColor.WHITE);
         add(contributeLine);
-        contribute.scale.x = 0;
+        contributeLine.scale.x = 0;
 
         FlxTimer.wait(0.5,() -> welcomes());
     }
