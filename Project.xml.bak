@@ -82,19 +82,9 @@
 	<!--Enable this for Nape release builds for a serious peformance improvement-->
 	<haxedef name="NAPE_RELEASE_BUILD" unless="debug" />
 	
-	<assets path='art/icon16.png' rename='icon.png' if="linux" />
-	<section if="mobile">
-    	<icon path="art/icon16.png" size='16'/>
-    	<icon path="art/icon32.png" size='32'/>
-    	<icon path="art/icon64.png" size='64'/>
-    	<icon path="art/iconOG.png" />
-    </section>
-    <section if="desktop">
-    	<icon path="art/icon16-PC.png" size='16'/>
-    	<icon path="art/icon32-PC.png" size='32'/>
-    	<icon path="art/icon64-PC.png" size='64'/>
-    	<icon path="art/iconOG-PC.png" />
-    </section>
+	<!-- _________________________________ Custom _______________________________ -->
+	
+	<!-- Place custom nodes like icons here -->
 
 	<set name="android.sdk.path" value="${ANDROID_HOME}" />
     <set name="android.install-location" value="auto" />
