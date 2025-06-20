@@ -15,6 +15,10 @@ import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
 
+import flixel.util.FlxTimer;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+
 import openfl.display.GradientType;
 import openfl.geom.Matrix;
 import openfl.display.Shape;
@@ -35,7 +39,14 @@ class MainState extends FlxState
     static final POINT_COLOR:FlxColor = FlxColor.WHITE;
     
     var points:FlxTypedGroup<FlxSprite>;
-    var canvas:FlxSprite;  
+    var canvas:FlxSprite;
+
+    var welcome:FlxText;
+
+    var start:FlxText;
+    var settings:FlxText;
+    var credits:FlxText;
+    var contribute:FlxText;
 
     override public function create():Void
     {
@@ -106,12 +117,12 @@ class MainState extends FlxState
     {
         super.update(elapsed);
 
-        trace(FlxG.mouse.x + " " + FlxG.mouse.y);
+        FlxG.autoPause = false;
         
         canvas.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
         
-        var mousePos = FlxPoint.get(FlxG.mouse.getScreenPosition(MainCam).x, 
-                              FlxG.mouse.getScreenPosition(MainCam).y);
+        var mousePos = FlxPoint.get(FlxG.mouse.getViewPosition(MainCam).x, 
+                              FlxG.mouse.getViewPosition(MainCam).y);
         
         points.forEachAlive(function(point:FlxSprite)
         {
@@ -212,7 +223,7 @@ class MainState extends FlxState
 
         bottomLine.cameras = [MainCam];
 
-        var version1 = new FlxText(930, 668, 0, "Concept-software 0.9");
+        var version1 = new FlxText(930, 668, 0, "Vesper Plume 0.9");
         version1.setFormat("assets/fonts/Main.ttf", 42, 0xFFFFFFFF, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE);
         version1.borderColor = 0xFF000000;
         version1.borderSize = 1;
@@ -221,7 +232,6 @@ class MainState extends FlxState
         version1.cameras = [MainCam];
         version1.scale.x = version1.scale.y = 0.5;
         
-        // 第二行版本信息
         var version2 = new FlxText(1085, 639, 0, "BY MaoPou");
         version2.setFormat("assets/fonts/Main.ttf", 42, 0xFFFFFFFF, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE);
         version2.borderColor = 0xFF000000;
@@ -230,5 +240,66 @@ class MainState extends FlxState
         add(version2);
         version2.cameras = [MainCam];
         version2.scale.x = version2.scale.y = 0.5;
+
+        welcome = new FlxText(0, 0, FlxG.width, "Welcome");
+        welcome.setFormat("assets/fonts/Main.ttf", 80, 0xFFFFFFFF, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE);
+        welcome.borderColor = 0xFF000000;
+        welcome.borderSize = 1;
+        welcome.antialiasing = true;
+        add(welcome);
+        welcome.cameras = [MainCam];
+        welcome.alpha = 0;
+
+        start = new FlxText(0, 213, FlxG.width, "Start");
+        start.setFormat("assets/fonts/Main.ttf", 80, 0xFFFFFFFF, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE);
+        start.borderColor = 0xFF000000;
+        start.borderSize = 1;
+        start.antialiasing = true;
+        add(start);
+        start.cameras = [MainCam];
+        //start.alpha = 0;
+        start.scale.x = start.scale.y = 0.5;
+        
+
+        settings = new FlxText(0, 303, FlxG.width, "Settings");
+        settings.setFormat("assets/fonts/Main.ttf", 80, 0xFFFFFFFF, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE);
+        settings.borderColor = 0xFF000000;
+        settings.borderSize = 1;
+        settings.antialiasing = true;
+        add(settings);
+        settings.cameras = [MainCam];
+        //settings.alpha = 0;
+        settings.scale.x = settings.scale.y = 0.5;
+
+        credits = new FlxText(0, 393, FlxG.width, "Credits");
+        credits.setFormat("assets/fonts/Main.ttf", 80, 0xFFFFFFFF, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE);
+        credits.borderColor = 0xFF000000;
+        credits.borderSize = 1;
+        credits.antialiasing = true;
+        add(credits);
+        credits.cameras = [MainCam];
+        //credits.alpha = 0;
+        credits.scale.x = credits.scale.y = 0.5;
+
+        contribute = new FlxText(0, 483, FlxG.width, "Contribute");
+        contribute.setFormat("assets/fonts/Main.ttf", 80, 0xFFFFFFFF, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE);
+        contribute.borderColor = 0xFF000000;
+        contribute.borderSize = 1;
+        contribute.antialiasing = true;
+        add(contribute);
+        contribute.cameras = [MainCam];
+        //contribute.alpha = 0;
+        contribute.scale.x = contribute.scale.y = 0.5;
+
+        FlxTimer.wait(0.5,() -> welcomes());
+    }
+
+    function welcomes() {
+        FlxTween.tween(welcome, {alpha: 1,y: 29}, 0.7, {ease: FlxEase.circOut});
+        FlxTimer.wait(2,() -> {
+            welcome.text = "Vesper Plume";
+            welcome.y = welcome.alpha = 0;
+            FlxTween.tween(welcome, {alpha: 1,y: 22}, 0.7, {ease: FlxEase.circOut});
+        });
     }
 }
