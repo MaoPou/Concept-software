@@ -111,27 +111,13 @@ jobs:
       - name: Compile
         run: haxelib run lime build android
 
-      - name: Find APK file
-        id: find_apk
-        run: |
-          # 使用find命令从指定路径开始递归查找所有apk文件
-          apk_files=$(find ./export/android/bin/ -type f -name "*.apk")
-          if [ -z "$apk_files" ]; then
-            echo "::error::No APK files found in the specified path."
-            exit 1  # 如果没有找到APK文件，直接终止工作流
-          else
-            echo "APK files found:"
-            echo "$apk_files"
-            echo "::set-output name=apk_files::$apk_files"
-          fi
-
       - name: Upload Artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@main
         with:
           name: androidBuild
-          path: ${{ steps.find_apk.outputs.apk_files }}
-
+          path: export\android\bin\app\build\outputs\apk\release\*.apk
+          if-no-files-found: error
 
       - name: Clearing already existing cache
         uses: actions/github-script@v6
