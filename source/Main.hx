@@ -23,7 +23,7 @@ class Main extends Sprite
 
 		FlxSprite.defaultAntialiasing = false;
 
-		addChild(new FlxGame(1280, 720, MainState, 120 , 120, true));
+		addChild(new FlxGame(1280, 720, MainState, 240 , 240, true));
 
 		openfl.Lib.current.stage.addChild(new FpsCounter());
 	}
