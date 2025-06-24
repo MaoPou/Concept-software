@@ -38,12 +38,13 @@
 	<!-- _______________________________ Libraries ______________________________ -->
 
 	<haxelib name="flixel" />
+	<haxelib name="format" />
 	
 	<!--In case you want to use the addons package-->
 	<haxelib name="flixel-addons" />
 	
 	<!--In case you want to use the ui package-->
-	<!--<haxelib name="flixel-ui" />-->
+	<haxelib name="flixel-ui" />
 	
 	<!--In case you want to use nape with flixel-->
 	<haxelib name="nape-haxe4" />
@@ -81,7 +82,7 @@
 	
 	<!--Enable this for Nape release builds for a serious peformance improvement-->
 	<haxedef name="NAPE_RELEASE_BUILD" unless="debug" />
-	
+
 	<assets path='art/icon16.png' rename='icon.png' if="linux" />
 	<section if="mobile">
     	<icon path="art/icon16.png" size='16'/>

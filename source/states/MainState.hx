@@ -1,5 +1,6 @@
 package states;
 
+import states.SettingState;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.FlxSprite;
@@ -16,13 +17,14 @@ import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
 
 import flixel.util.FlxTimer;
-import flixel.tweens.FlxTween;
-import flixel.tweens.FlxEase;
 
 import openfl.display.GradientType;
 import openfl.geom.Matrix;
 import openfl.display.Shape;
 import openfl.utils.Assets;
+import openfl.display.BitmapData;
+
+import openfl.display.Sprite;
 
 class MainState extends FlxState
 {
@@ -61,6 +63,8 @@ class MainState extends FlxState
 
     var nowChoise:Int = -1;
     var helpChoise:Int = -1;
+
+    var entering:Bool = false;
 
     override public function create():Void
     {
@@ -125,6 +129,8 @@ class MainState extends FlxState
         }
 
         createDecorativeLines();
+
+        entering = false;
     }
 
     override public function update(elapsed:Float):Void
@@ -241,6 +247,31 @@ class MainState extends FlxState
         creditsLine.y = credits.y + credits.height + 5;
         contributeLine.y = contribute.y + contribute.height + 5;
 
+        if(FlxG.mouse.justReleased){
+            switchState();
+        }
+    }
+
+    function switchState(){
+        if(!entering){
+            switch(nowChoise){
+            case 0: {
+                entering = true;
+            }
+            case 1: {
+                FlxTween.tween(MainCam, {alpha: 0}, 0.5, {ease: FlxEase.circIn,onComplete: function (_) {
+                    FlxG.switchState(SettingState.new);
+                }});
+                entering = true;
+            }
+            case 2: {
+                entering = true;
+            }
+            case 3: {
+                entering = true;
+            }
+        }
+        }
     }
 
     function updateLine(now:Int) {
@@ -382,17 +413,17 @@ class MainState extends FlxState
         add(contributeLine);
         contributeLine.scale.x = 0;
 
-        FlxTimer.wait(0.5,() -> welcomes());
+        FlxTimer.wait(0.3,() -> welcomes());
     }
 
     function welcomes() {
-        FlxTween.tween(welcome, {alpha: 1,y: 29}, 0.7, {
+        FlxTween.tween(welcome, {alpha: 1,y: 29}, 0.2, {
             ease: FlxEase.circOut,
             onComplete: function(flx:FlxTween){
-                FlxTween.tween(start, {alpha: 1,y: 213}, 0.7, {ease: FlxEase.circOut});
-                FlxTimer.wait(0.1,() -> FlxTween.tween(settings, {alpha: 1,y: 303}, 0.7, {ease: FlxEase.circOut}));
-                FlxTimer.wait(0.2,() -> FlxTween.tween(credits, {alpha: 1,y: 393}, 0.7, {ease: FlxEase.circOut}));
-                FlxTimer.wait(0.3,() -> FlxTween.tween(contribute, {alpha: 1,y: 483}, 0.7, {ease: FlxEase.circOut}));
+                FlxTween.tween(start, {alpha: 1,y: 213}, 0.2, {ease: FlxEase.circOut});
+                FlxTimer.wait(0.1,() -> FlxTween.tween(settings, {alpha: 1,y: 303}, 0.2, {ease: FlxEase.circOut}));
+                FlxTimer.wait(0.2,() -> FlxTween.tween(credits, {alpha: 1,y: 393}, 0.2, {ease: FlxEase.circOut}));
+                FlxTimer.wait(0.3,() -> FlxTween.tween(contribute, {alpha: 1,y: 483}, 0.2, {ease: FlxEase.circOut}));
 
                 FlxTimer.wait(0.3,() -> FlxTween.tween(version1, {x: 1085}, 1, {ease: FlxEase.backOut}));
                 FlxTimer.wait(0.4,() -> FlxTween.tween(version2, {x: 995}, 1, {ease: FlxEase.backOut}));
